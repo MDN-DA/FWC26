@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#002868" />
+    <title>World Cup 2026 Tracker</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/QNcBC3sT/FWC26.png">
+    <link rel="icon" href="https://i.postimg.cc/QNcBC3sT/FWC26.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // Enable class-based dark mode
+        theme: {
+          extend: {
+            fontFamily: {
+              roboto: ['Roboto', 'sans-serif'],
+              display: ['Montserrat', 'sans-serif'], // Premium font for headers
+            },
+            colors: {
+              'host-green': '#006847', // Mexico
+              'host-white': '#FFFFFF',
+              'host-red': '#CE1126',   // Canada / USA
+              'host-blue': '#002868',  // USA
+              'dark-card': '#1e293b', // Slate 800
+              'dark-border': '#334155', // Slate 700
+              'dark-bg': '#0f172a', // Slate 900
+              'arsenal-red': '#b4191d', // Custom Arsenal Red
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Custom scrollbar for webkit */
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        /* Gradient thumb matching hosts */
+        background-image: linear-gradient(to bottom, #006847, #CE1126, #002868);
+        border-radius: 20px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-100 dark:bg-dark-bg text-gray-900 dark:text-gray-100 font-roboto min-h-screen overflow-x-hidden">
+    <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Use ./sw.js and handle errors silently to avoid visual logs in preview environments
+          navigator.serviceWorker.register('./sw.js').then(registration => {
+            console.log('SW registered'); 
+          }).catch(registrationError => {
+            // Silently fail to avoid polluting the UI logs with "Scope URL" errors in previews
+            // console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
