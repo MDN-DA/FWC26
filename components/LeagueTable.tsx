@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { StandingEntry, UCLGroup, Stat } from '../types';
-import { Card, TeamLogoWithFallback } from './ui';
+import { Card } from './ui';
 import { countryMapping, getFlagCode } from '../constants';
 
 export const LeagueTable: React.FC<{ 
@@ -15,14 +15,11 @@ export const LeagueTable: React.FC<{
     cols?: number; 
     id?: string;
     logo?: string;
-}> = ({ title, subTitle, standings, isUCL, solidCutoffs, dottedCutoffs, customCutoffs, cols = 1, id, logo }) => {
+    overrides?: Record<string, string>;
+}> = ({ title, subTitle, standings, isUCL, solidCutoffs, dottedCutoffs, customCutoffs, cols = 1, id, logo, overrides }) => {
     const [sortConfig, setSortConfig] = React.useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'rank', direction: 'asc' });
 
-    // Detect if data is grouped
     const isGroupedDataRaw = Array.isArray(standings) && standings.length > 0 && 'standings' in standings[0] && 'name' in standings[0];
-
-    // Only render as Grid if there are MULTIPLE groups (like World Cup Groups A-H). 
-    // If it's a single group (like UCL League Phase), we flatten it to render a proper table.
     const renderAsGrid = isGroupedDataRaw && standings.length > 1;
 
     if (!standings || standings.length === 0) {
@@ -43,7 +40,6 @@ export const LeagueTable: React.FC<{
         setSortConfig({ key, direction });
     };
 
-    // --- Headers ---
     const headers: { key: string; label: string; className?: string, sortable: boolean }[] = [
         { key: 'rank', label: 'Pos', sortable: true, className: 'sticky left-0 z-10 bg-white/95 dark:bg-dark-card/95 w-8 text-center' },
         { key: 'club', label: 'Team', sortable: false, className: 'sticky left-8 z-10 bg-white/95 dark:bg-dark-card/95 shadow-[1px_0_2px_-1px_rgba(0,0,0,0.1)] pl-2' },
@@ -63,7 +59,6 @@ export const LeagueTable: React.FC<{
             sortedEntries.sort((a, b) => {
                 const aValue = getStatValue(a, sortConfig.key) || (sortConfig.key === 'rank' ? 999 : 0);
                 const bValue = getStatValue(b, sortConfig.key) || (sortConfig.key === 'rank' ? 999 : 0);
-                
                 if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -73,23 +68,16 @@ export const LeagueTable: React.FC<{
         return (
         <tbody className="divide-y divide-gray-200/50 dark:divide-dark-border/50">
             {sortedEntries.map((entry: StandingEntry, index: number) => {
-                const logoUrl = entry.team?.logos?.[0]?.href || '';
-                const teamAbbr = entry.team?.abbreviation || entry.team?.name?.substring(0,3) || '?';
-                
-                // Name Shortening Logic
                 const rawName = entry.team.name;
-                const displayName = countryMapping[rawName] || rawName;
-                const flagCode = getFlagCode(rawName);
+                const resolvedName = (overrides && overrides[rawName]) || rawName;
+                const displayName = countryMapping[resolvedName] || resolvedName;
+                const flagCode = getFlagCode(resolvedName);
 
-                // Use rank from stats if available, otherwise index+1
                 const rank = getStatValue(entry, 'rank') || (index + 1);
-                
-                // Highlight host nations
-                const isHost = ['Mexico', 'Canada', 'USA', 'United States'].includes(rawName);
+                const isHost = ['Mexico', 'Canada', 'USA', 'United States'].includes(resolvedName);
 
                 const renderSeparator = () => {
                     let Separator = null;
-                    // Only show separators if we are sorting by Rank (default)
                     if (sortConfig?.key === 'rank' && sortConfig.direction === 'asc') {
                         if (solidCutoffs?.includes(rank)) {
                             Separator = <div className="h-0.5 bg-black/50 dark:bg-gray-600/80 my-0.5"></div>;
@@ -98,7 +86,6 @@ export const LeagueTable: React.FC<{
                         } else if (customCutoffs?.includes(rank)) {
                             Separator = <div className="h-0.5 bg-black/50 dark:bg-gray-600/80 my-0.5"></div>;
                         } else if (!solidCutoffs && !dottedCutoffs && !customCutoffs) {
-                             // Default fallback logic for World Cup
                              if (!isMini && rank === 2) Separator = <div className="h-px border-t border-dashed border-gray-400/70 dark:border-gray-700/70 my-0.5"></div>;
                         }
                     }
@@ -106,10 +93,7 @@ export const LeagueTable: React.FC<{
                 };
                 
                 const gd = getStatValue(entry, 'pointDifferential');
-
-                // Adjust padding and sizing based on isMini (Grid View) vs Standard View
                 const cellPadding = isMini ? 'p-2' : 'p-1.5';
-                const rankWidth = isMini ? 'w-8' : 'w-8';
                 const flagSize = isMini ? 'w-[22px] h-[16px]' : 'w-[16px] h-[12px]';
 
                 return (
@@ -122,11 +106,11 @@ export const LeagueTable: React.FC<{
                                 {flagCode && (
                                     <img 
                                         src={`https://flagcdn.com/w40/${flagCode}.png`} 
-                                        alt={`Flag of ${rawName}`}
+                                        alt={`Flag of ${resolvedName}`}
                                         className={`${flagSize} rounded-[2px] shadow-sm object-cover`} 
                                     />
                                 )}
-                                <span className={`min-w-0 truncate max-w-[120px] sm:max-w-none font-bold ${isHost ? 'text-host-blue dark:text-blue-400' : ''}`} title={rawName}>
+                                <span className={`min-w-0 truncate max-w-[120px] sm:max-w-none font-bold ${isHost ? 'text-host-blue dark:text-blue-400' : ''}`} title={resolvedName}>
                                     {displayName}
                                 </span>
                             </div>
@@ -148,10 +132,8 @@ export const LeagueTable: React.FC<{
         );
     };
     
-    // --- Render Grouped View (Grid) ---
     if (renderAsGrid) {
         let gridClass = "grid-cols-1 md:grid-cols-2";
-        if (cols === 1) gridClass = "grid-cols-1"; 
         if (cols === 3) gridClass = "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
         if (cols === 4) gridClass = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
 
@@ -182,7 +164,6 @@ export const LeagueTable: React.FC<{
         );
     }
 
-    // --- Render Standard View (Flat) ---
     let flatEntries: StandingEntry[] = [];
     if (isGroupedDataRaw && !renderAsGrid) {
         flatEntries = (standings as UCLGroup[])[0].standings.entries;

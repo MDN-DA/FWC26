@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Fixture, UCLGroup } from '../types';
-import { CITY_TIMEZONES, getFlagCode, countryMapping } from '../constants';
+import { CITY_TIMEZONES, getFlagCode, countryMapping, GROUPS } from '../constants';
 import { wcFixtures } from '../data/fixtures';
 import { resolveTeamName } from '../utils/standingsUtils';
 import { R32Pairings } from '../data/combinations';
@@ -11,6 +11,7 @@ interface CountdownProps {
     liveScores?: Record<number, any>;
     pairings?: R32Pairings | null;
     onMatchClick?: (matchId: number) => void;
+    activeTab?: string;
 }
 
 interface TimeLeft {
@@ -20,7 +21,7 @@ interface TimeLeft {
     seconds: number;
 }
 
-export const Countdown: React.FC<CountdownProps> = ({ groups, liveScores, pairings, onMatchClick }) => {
+export const Countdown: React.FC<CountdownProps> = ({ groups, liveScores, pairings, onMatchClick, activeTab }) => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [nextMatches, setNextMatches] = useState<Fixture[]>([]);
   const [statusText, setStatusText] = useState("Countdown to Kickoff");
@@ -79,7 +80,28 @@ export const Countdown: React.FC<CountdownProps> = ({ groups, liveScores, pairin
           setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
           setStatusText("LIVE NOW");
       } else {
-          setStatusText(simultaneous.length > 1 ? "Simultaneous Kickoff" : "Next Match");
+          // LOGIQUE CONTEXTUELLE DYNAMIQUE (DEMANDE UTILISATEUR)
+          let context = "";
+          if (firstMatch.matchNumber === 1) {
+              context = "Opening Match";
+          } else if (firstMatch.round === "Group Stage") {
+              let grpName = "?";
+              for (const [letter, teams] of Object.entries(GROUPS)) {
+                  if (teams.includes(firstMatch.homeTeam) || firstMatch.homeTeam.includes(letter)) {
+                      grpName = letter;
+                      break;
+                  }
+              }
+              context = `Group ${grpName}`;
+          } else {
+              context = firstMatch.round;
+          }
+
+          if (simultaneous.length > 1) {
+              setStatusText(`Simultaneous Kickoff (${context.toUpperCase()})`);
+          } else {
+              setStatusText(context.toUpperCase());
+          }
 
           const totalSeconds = Math.floor(distance / 1000);
           const totalMinutes = Math.floor(totalSeconds / 60);
