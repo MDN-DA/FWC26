@@ -11,7 +11,7 @@ interface PlayoffsProps {
     liveScores?: Record<string, { scoreStr: string, status: string, minute?: string, winner?: string }>;
 }
 
-const VenueFlag = ({ city }: { city: string }) => {
+const VenueFlag: React.FC<{ city: string }> = ({ city }) => {
     const cities = city.split('/').map(c => c.trim());
     const cityToFlag: Record<string, string> = {
         "Cardiff": "gb-wls", "Zenica": "ba", "Bergamo": "it", "Warsaw": "pl",
@@ -32,7 +32,13 @@ const VenueFlag = ({ city }: { city: string }) => {
     );
 };
 
-const PlayoffFixtureCard = ({ match, pathWinner, useLocalTime, resolvedFinalVenue, liveData }: { match: PlayoffMatch, pathWinner?: string, useLocalTime: boolean, resolvedFinalVenue?: string, liveData?: { scoreStr: string, status: string, minute?: string } }) => {
+const PlayoffFixtureCard: React.FC<{ 
+    match: PlayoffMatch; 
+    pathWinner?: string; 
+    useLocalTime: boolean; 
+    resolvedFinalVenue?: string; 
+    liveData?: { scoreStr: string; status: string; minute?: string }; 
+}> = ({ match, pathWinner, useLocalTime, resolvedFinalVenue, liveData }) => {
     const [mode, setMode] = useState<'time' | 'countdown'>('time');
     const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, s: number } | null>(null);
 
@@ -112,17 +118,19 @@ const PlayoffFixtureCard = ({ match, pathWinner, useLocalTime, resolvedFinalVenu
                 <div className="flex flex-col items-center justify-center w-[40%] h-12 relative overflow-hidden">
                     <div className={`absolute transition-all duration-700 flex flex-col items-center ${(mode === 'time' || isMatchLive || isMatchFinal) ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
                         <span className={`text-xl font-black font-mono tracking-tighter ${isMatchLive ? 'text-red-600' : 'text-host-red dark:text-red-400'}`}>
-                            {(isMatchLive || isMatchFinal) ? liveData.scoreStr : displayTime}
+                            {(isMatchLive || isMatchFinal) ? liveData?.scoreStr : displayTime}
                         </span>
                         <span className="text-[9px] font-black text-gray-300 italic -mt-1 uppercase">VS</span>
                     </div>
                     {!isMatchLive && !isMatchFinal && timeLeft && (
                         <div className={`absolute transition-all duration-700 flex flex-col items-center ${mode === 'countdown' ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-                            <div className="flex gap-1 font-mono text-gray-900 dark:text-white">
-                                <span className="text-base font-black leading-none">{timeLeft.d}d</span>
-                                <span className="text-base font-black leading-none">{timeLeft.h}h</span>
+                            <div className="flex gap-1 font-mono text-gray-900 dark:text-white items-baseline">
+                                {timeLeft.d > 0 && <span className="text-base font-black leading-none">{timeLeft.d}d</span>}
+                                <span className="text-base font-black leading-none">{timeLeft.h.toString().padStart(2,'0')}h</span>
+                                <span className="text-base font-black leading-none">{timeLeft.m.toString().padStart(2,'0')}m</span>
+                                <span className="text-base font-black leading-none text-host-red">{timeLeft.s.toString().padStart(2,'0')}s</span>
                             </div>
-                            <span className="text-[7px] font-black text-host-red uppercase tracking-widest mt-0.5 animate-pulse">Left</span>
+                            <span className="text-[7px] font-black text-host-red uppercase tracking-widest mt-0.5 animate-pulse">Remaining</span>
                         </div>
                     )}
                 </div>
