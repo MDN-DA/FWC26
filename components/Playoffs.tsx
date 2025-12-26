@@ -12,64 +12,33 @@ interface PlayoffsProps {
 }
 
 const VenueFlag = ({ city }: { city: string }) => {
-    // Gère les villes multiples comme "Cardiff / Zenica"
     const cities = city.split('/').map(c => c.trim());
     const cityToFlag: Record<string, string> = {
-        "Cardiff": "gb-wls", 
-        "Zenica": "ba", 
-        "Bergamo": "it", 
-        "Warsaw": "pl",
-        "Solna": "se", 
-        "Valencia": "es", 
-        "Bratislava": "sk", 
-        "Pristina": "xk",
-        "Istanbul": "tr", 
-        "Praha": "cz", 
-        "Dublin": "ie", 
-        "Copenhagen": "dk",
-        "Guadalajara": "mx", 
-        "Monterrey": "mx"
+        "Cardiff": "gb-wls", "Zenica": "ba", "Bergamo": "it", "Warsaw": "pl",
+        "Solna": "se", "Valencia": "es", "Bratislava": "sk", "Pristina": "xk",
+        "Istanbul": "tr", "Praha": "cz", "Dublin": "ie", "Copenhagen": "dk",
+        "Guadalajara": "mx", "Monterrey": "mx"
     };
-    
     return (
         <div className="flex items-center gap-1.5">
             {cities.map((c, i) => {
                 const code = cityToFlag[c];
                 if (!code) return null;
                 return (
-                    <img 
-                        key={i}
-                        src={`https://flagcdn.com/w40/${code}.png`} 
-                        className="w-4 h-2.5 rounded-[1px] shadow-sm object-cover border border-white/20" 
-                        alt={c} 
-                        title={c}
-                    />
+                    <img key={i} src={`https://flagcdn.com/w40/${code}.png`} className="w-4 h-2.5 rounded-[1px] shadow-sm object-cover border border-white/20" alt={c} title={c} />
                 );
             })}
         </div>
     );
 };
 
-const PlayoffFixtureCard = ({ 
-    match, 
-    pathWinner,
-    useLocalTime,
-    resolvedFinalVenue,
-    liveData
-}: { 
-    match: PlayoffMatch, 
-    pathWinner?: string,
-    useLocalTime: boolean,
-    resolvedFinalVenue?: string,
-    liveData?: { scoreStr: string, status: string, minute?: string }
-}) => {
+const PlayoffFixtureCard = ({ match, pathWinner, useLocalTime, resolvedFinalVenue, liveData }: { match: PlayoffMatch, pathWinner?: string, useLocalTime: boolean, resolvedFinalVenue?: string, liveData?: { scoreStr: string, status: string, minute?: string } }) => {
     const [mode, setMode] = useState<'time' | 'countdown'>('time');
     const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, s: number } | null>(null);
 
     const flag1 = getFlagCode(match.team1.name);
     const flag2 = getFlagCode(match.team2.name);
     const currentVenue = resolvedFinalVenue || match.venue || '';
-
     const isMatchLive = liveData?.status === "STATUS_IN_PROGRESS";
     const isMatchFinal = liveData?.status === "STATUS_FINAL";
 
@@ -113,159 +82,105 @@ const PlayoffFixtureCard = ({
         return () => clearInterval(flipInterval);
     }, [isMatchLive, isMatchFinal]);
 
-    const formatPlayoffTime = () => {
+    const { displayDate, displayTime } = (() => {
         if (!match.time) return { displayDate: match.date, displayTime: 'TBD' };
-        const cleanCity = currentVenue.split('/')[0].trim();
-        const offset = CITY_TIMEZONES[cleanCity] ?? 0;
-        const [day, monthStr] = match.date.split(' ');
-        if (!useLocalTime) return { displayDate: `${day} ${monthStr}`, displayTime: match.time };
         const target = getTargetTime();
         const dateObj = new Date(target);
+        if (!useLocalTime) return { displayDate: match.date.substring(0, 6), displayTime: match.time };
         return { 
             displayDate: `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}`, 
             displayTime: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
         };
-    };
-
-    const { displayDate, displayTime } = formatPlayoffTime();
-    const isPathWinner = (team: string) => pathWinner === team;
+    })();
 
     return (
         <div className={`relative bg-white dark:bg-dark-card border rounded-2xl p-4 shadow-sm transition-all duration-300 overflow-hidden ${match.isFinal ? 'border-yellow-400 ring-1 ring-yellow-400/10' : 'border-gray-100 dark:border-white/5'}`}>
             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider border-b border-gray-100 dark:border-white/5 pb-2 mb-4">
                 <span className="text-gray-400 font-mono">{displayDate}</span>
                 <div className="flex items-center gap-1.5">
-                    {isMatchLive && (
-                         <div className="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-bold animate-pulse">LIVE {liveData.minute ? `'${liveData.minute}` : ''}</div>
-                    )}
+                    {isMatchLive && <div className="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-bold animate-pulse">LIVE</div>}
                     <span className={`px-2 py-0.5 rounded text-[8px] font-black ${match.isFinal ? 'bg-yellow-400 text-white' : 'bg-gray-800 text-white'}`}>
                         {match.isFinal ? 'FINAL' : 'SF'}
                     </span>
                 </div>
             </div>
-
             <div className="flex items-center justify-between gap-2 px-1">
                 <div className="flex flex-col items-center w-[30%] text-center gap-2">
-                    {flag1 ? <img src={`https://flagcdn.com/w80/${flag1}.png`} alt="" className="w-12 h-9 object-cover rounded shadow-md border border-gray-100 dark:border-white/10" /> : <div className="w-12 h-9 bg-gray-200 dark:bg-white/10 rounded flex items-center justify-center text-[8px]">?</div>}
-                    <span className={`text-[11px] font-black uppercase tracking-tight truncate w-full ${isPathWinner(match.team1.name) ? 'text-host-blue dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'}`}>{countryMapping[match.team1.name] || match.team1.name}</span>
+                    {flag1 ? <img src={`https://flagcdn.com/w80/${flag1}.png`} alt="" className="w-10 h-7.5 object-cover rounded shadow-sm border border-gray-100 dark:border-white/10" /> : <div className="w-10 h-7.5 bg-gray-200 dark:bg-white/10 rounded flex items-center justify-center text-[8px]">?</div>}
+                    <span className={`text-[10px] font-bold uppercase tracking-tight truncate w-full ${pathWinner === match.team1.name ? 'text-host-blue dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>{countryMapping[match.team1.name] || match.team1.name}</span>
                 </div>
-
                 <div className="flex flex-col items-center justify-center w-[40%] h-12 relative overflow-hidden">
                     <div className={`absolute transition-all duration-700 flex flex-col items-center ${(mode === 'time' || isMatchLive || isMatchFinal) ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-                        <span className={`text-2xl font-black font-mono tracking-tighter ${isMatchLive ? 'text-red-600' : 'text-host-red dark:text-red-400'}`}>
+                        <span className={`text-xl font-black font-mono tracking-tighter ${isMatchLive ? 'text-red-600' : 'text-host-red dark:text-red-400'}`}>
                             {(isMatchLive || isMatchFinal) ? liveData.scoreStr : displayTime}
                         </span>
-                        <span className="text-[10px] font-black text-gray-300 italic -mt-1 uppercase">VS</span>
+                        <span className="text-[9px] font-black text-gray-300 italic -mt-1 uppercase">VS</span>
                     </div>
-                    
                     {!isMatchLive && !isMatchFinal && timeLeft && (
                         <div className={`absolute transition-all duration-700 flex flex-col items-center ${mode === 'countdown' ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
                             <div className="flex gap-1 font-mono text-gray-900 dark:text-white">
-                                <span className="text-lg font-black leading-none">{timeLeft.d}d</span>
-                                <span className="text-lg font-black leading-none">{timeLeft.h}h</span>
-                                <span className="text-lg font-black leading-none">{timeLeft.m}m</span>
+                                <span className="text-base font-black leading-none">{timeLeft.d}d</span>
+                                <span className="text-base font-black leading-none">{timeLeft.h}h</span>
                             </div>
                             <span className="text-[7px] font-black text-host-red uppercase tracking-widest mt-0.5 animate-pulse">Left</span>
                         </div>
                     )}
                 </div>
-
                 <div className="flex flex-col items-center w-[30%] text-center gap-2">
-                    {flag2 ? <img src={`https://flagcdn.com/w80/${flag2}.png`} alt="" className="w-12 h-9 object-cover rounded shadow-md border border-gray-100 dark:border-white/10" /> : <div className="w-12 h-9 bg-gray-200 dark:bg-white/10 rounded flex items-center justify-center text-[8px]">?</div>}
-                    <span className={`text-[11px] font-black uppercase tracking-tight truncate w-full ${isPathWinner(match.team2.name) ? 'text-host-blue dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'}`}>{countryMapping[match.team2.name] || match.team2.name}</span>
+                    {flag2 ? <img src={`https://flagcdn.com/w80/${flag2}.png`} alt="" className="w-10 h-7.5 object-cover rounded shadow-sm border border-gray-100 dark:border-white/10" /> : <div className="w-10 h-7.5 bg-gray-200 dark:bg-white/10 rounded flex items-center justify-center text-[8px]">?</div>}
+                    <span className={`text-[10px] font-bold uppercase tracking-tight truncate w-full ${pathWinner === match.team2.name ? 'text-host-blue dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>{countryMapping[match.team2.name] || match.team2.name}</span>
                 </div>
             </div>
-
-            <div className="mt-5 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-center gap-3">
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-center gap-2">
                 <VenueFlag city={currentVenue} />
-                <span className="text-[9px] text-gray-400 uppercase font-black tracking-[0.2em]">{currentVenue}</span>
+                <span className="text-[8px] text-gray-400 uppercase font-black tracking-widest">{currentVenue}</span>
             </div>
         </div>
     );
 };
 
 export const Playoffs: React.FC<PlayoffsProps> = ({ uefa, inter, winners = {}, useLocalTime, liveScores = {} }) => {
-    // SELECTION AUTOMATIQUE DE LA VILLE FINALE
     const resolveFinalCity = (path: PlayoffPath) => {
         const venue = path.matches.final.venue;
         if (!venue || !venue.includes('/')) return venue;
-
         const sf1 = path.matches.semis[0];
-        const matchKey1 = `${sf1.team1.name}|${sf1.team2.name}`;
-        const matchKey2 = `${sf1.team2.name}|${sf1.team1.name}`;
-        const resSF1 = liveScores[matchKey1] || liveScores[matchKey2];
+        const resSF1 = liveScores[`${sf1.team1.name}|${sf1.team2.name}`] || liveScores[`${sf1.team2.name}|${sf1.team1.name}`];
         const cities = venue.split('/').map(c => c.trim());
-
-        // Si le vainqueur de la SF1 est connu (réel ou simulé via liveScores.winner), on fige la ville
-        if (resSF1 && resSF1.winner) {
-            // Dans le tableau UEFA, le vainqueur de la SF1 reçoit la finale s'il gagne
-            return resSF1.winner === sf1.team1.name ? cities[0] : cities[1];
-        }
-
+        if (resSF1 && resSF1.winner) return resSF1.winner === sf1.team1.name ? cities[0] : cities[1];
         return venue;
     };
 
     return (
-        <div className="space-y-10 animate-fadeIn max-w-[1400px] mx-auto pb-10">
+        <div className="space-y-12 animate-fadeIn max-w-[1400px] mx-auto pb-10">
             <div className="bg-white dark:bg-dark-card border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-host-blue flex items-center justify-center text-white shadow-lg font-black italic text-xl">P</div>
                     <div>
                         <h3 className="text-xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">Qualifiers Dashboard</h3>
-                        <p className="text-xs text-gray-500 font-medium tracking-tight">Real-time playoff results. Final city selected automatically based on SF1 winner.</p>
+                        <p className="text-xs text-gray-500 font-medium tracking-tight uppercase tracking-widest">Real-time playoff results & Venue Automation</p>
                     </div>
                 </div>
             </div>
-
             <section className="space-y-8">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">UEFA Paths</h2>
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-white/5"></div>
-                </div>
+                <div className="flex items-center gap-4"><h2 className="text-xs font-black uppercase tracking-[0.4em] text-gray-400">UEFA Paths</h2><div className="flex-1 h-px bg-gray-200 dark:bg-white/5"></div></div>
                 {uefa.map(path => (
                     <div key={path.name} className="space-y-4">
-                        <div className="flex items-center gap-3">
-                             <div className="w-7 h-7 rounded-lg bg-host-blue flex items-center justify-center text-white font-black text-[10px]">{path.name.slice(-1)}</div>
-                             <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">{path.name}</h4>
-                        </div>
+                        <div className="flex items-center gap-3"><div className="w-7 h-7 rounded-lg bg-host-blue flex items-center justify-center text-white font-black text-[10px]">{path.name.slice(-1)}</div><h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">{path.name}</h4></div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {path.matches.semis.map((m, i) => (
-                                <PlayoffFixtureCard key={i} match={m} useLocalTime={useLocalTime} liveData={liveScores[`${m.team1.name}|${m.team2.name}`]} />
-                            ))}
-                            <PlayoffFixtureCard 
-                                match={path.matches.final} 
-                                pathWinner={winners[path.name.includes("[") ? path.name : `${path.name} [UEFA]`]} 
-                                useLocalTime={useLocalTime}
-                                resolvedFinalVenue={resolveFinalCity(path)}
-                                liveData={liveScores[`${path.matches.final.team1.name}|${path.matches.final.team2.name}`]}
-                            />
+                            {path.matches.semis.map((m, i) => (<PlayoffFixtureCard key={i} match={m} useLocalTime={useLocalTime} liveData={liveScores[`${m.team1.name}|${m.team2.name}`] || liveScores[`${m.team2.name}|${m.team1.name}`]} />))}
+                            <PlayoffFixtureCard match={path.matches.final} pathWinner={winners[`${path.name} [UEFA]`]} useLocalTime={useLocalTime} resolvedFinalVenue={resolveFinalCity(path)} liveData={liveScores[`${path.matches.final.team1.name}|${path.matches.final.team2.name}`] || liveScores[`${path.matches.final.team2.name}|${path.matches.final.team1.name}`]} />
                         </div>
                     </div>
                 ))}
             </section>
-
             <section className="space-y-8">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Intercontinental Pathways</h2>
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-white/5"></div>
-                </div>
+                <div className="flex items-center gap-4"><h2 className="text-xs font-black uppercase tracking-[0.4em] text-gray-400">Intercontinental Pathways</h2><div className="flex-1 h-px bg-gray-200 dark:bg-white/5"></div></div>
                 {inter.map(path => (
                     <div key={path.name} className="space-y-4">
-                        <div className="flex items-center gap-3">
-                             <div className="w-7 h-7 rounded-lg bg-host-red flex items-center justify-center text-white font-black text-[10px]">{path.name.slice(-1)}</div>
-                             <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">{path.name}</h4>
-                        </div>
+                        <div className="flex items-center gap-3"><div className="w-7 h-7 rounded-lg bg-host-red flex items-center justify-center text-white font-black text-[10px]">{path.name.slice(-1)}</div><h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">{path.name}</h4></div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {path.matches.semis.map((m, i) => (
-                                <PlayoffFixtureCard key={i} match={m} useLocalTime={useLocalTime} liveData={liveScores[`${m.team1.name}|${m.team2.name}`]} />
-                            ))}
-                            <PlayoffFixtureCard 
-                                match={path.matches.final} 
-                                pathWinner={winners[path.name]} 
-                                useLocalTime={useLocalTime}
-                                resolvedFinalVenue={path.matches.final.venue}
-                                liveData={liveScores[`${path.matches.final.team1.name}|${path.matches.final.team2.name}`]}
-                            />
+                            {path.matches.semis.map((m, i) => (<PlayoffFixtureCard key={i} match={m} useLocalTime={useLocalTime} liveData={liveScores[`${m.team1.name}|${m.team2.name}`] || liveScores[`${m.team2.name}|${m.team1.name}`]} />))}
+                            <PlayoffFixtureCard match={path.matches.final} pathWinner={winners[path.name]} useLocalTime={useLocalTime} resolvedFinalVenue={path.matches.final.venue} liveData={liveScores[`${path.matches.final.team1.name}|${path.matches.final.team2.name}`] || liveScores[`${path.matches.final.team2.name}|${path.matches.final.team1.name}`]} />
                         </div>
                     </div>
                 ))}

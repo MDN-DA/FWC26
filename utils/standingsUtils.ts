@@ -4,12 +4,9 @@ import { R32Pairings } from '../data/combinations';
 
 export const calculateBestThirds = (groups: UCLGroup[]): StandingEntry[] => {
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
-    
-    // DATE CHARNIERE : Le tableau des 3èmes s'affiche seulement à partir du 18 juin 2026
     const now = new Date();
     const releaseDate = new Date('2026-06-18T00:00:00Z');
     const isPastRelease = now >= releaseDate;
-    
     const started = hasGamesStarted(groups);
 
     if (!groups || groups.length === 0 || !started || !isPastRelease) {
@@ -83,19 +80,16 @@ export const resolveTeamName = (
     overrides?: Record<string, string>
 ): string => {
     if (!name) return "?";
-    // OVERRIDES: Utilisé UNIQUEMENT dans l'onglet Predict
     if (overrides && overrides[name]) return overrides[name];
 
     const now = new Date();
-    // LOGIQUE TEMPORELLE STRICTE : 18 Juin 2026 pour le Bracket réel
     const releaseDate = new Date('2026-06-18T00:00:00Z');
     const tournamentStartDate = new Date('2026-06-11T00:00:00Z');
-    
-    // Si on a des overrides venant du composant, c'est qu'on est en Predict
     const isSimulation = overrides && Object.keys(overrides).length > 0;
     const isPastRelease = now >= releaseDate;
     const isTournamentStarted = now >= tournamentStartDate;
 
+    // 1. Resolution des vainqueurs de matchs (W74, W89...)
     const matchWinnerMatch = name.match(/^W\s?(\d+)$/);
     if (matchWinnerMatch) {
         const matchId = parseInt(matchWinnerMatch[1]);
@@ -103,6 +97,7 @@ export const resolveTeamName = (
         return name; 
     }
     
+    // 2. Resolution des perdants de matchs (L101, L102...)
     const matchLoserMatch = name.match(/^L\s?(\d+)$/);
     if (matchLoserMatch) {
          const matchId = parseInt(matchLoserMatch[1]);
@@ -117,15 +112,23 @@ export const resolveTeamName = (
          return name;
     }
 
-    // RESOLUTION DES 3EMES : Uniquement en simulation ou après le 18 juin 2026
-    if (name.startsWith("3(") && pairings && homeTeamContext) {
-        if (isSimulation || (isTournamentStarted && isPastRelease)) {
-            const opponentCode = pairings[homeTeamContext as keyof R32Pairings];
-            return opponentCode ? resolveTeamName(opponentCode, groups, fixtures, results, pairings, undefined, overrides) : name;
+    // 3. Resolution des 3èmes places complexes
+    if (name.startsWith("3(") || name.startsWith("3A") || name.startsWith("3C")) {
+        // En mode simulator ou après MD3
+        if (pairings && homeTeamContext) {
+             const opponentCode = pairings[homeTeamContext as keyof R32Pairings];
+             if (opponentCode && opponentCode.startsWith("3")) {
+                  // On tente de resoudre le code spécifique du pairing (ex: 3E)
+                  const letter = opponentCode.slice(-1);
+                  const grp = groups?.find(g => g.name.endsWith(letter));
+                  if (grp && grp.standings.entries.length >= 3 && (isSimulation || (isTournamentStarted && isPastRelease))) {
+                      return grp.standings.entries[2].team.name;
+                  }
+             }
         }
-        return name; // Retourne le placeholder générique (ex: 3(ACD)) avant le 18 juin
     }
 
+    // 4. Resolution des Group Winners / Runners up (1A, 2B...)
     const groupMatch = name.match(/^([123])([A-L])$/);
     if (groupMatch && groups?.length) {
         const rank = parseInt(groupMatch[1]);
@@ -136,9 +139,6 @@ export const resolveTeamName = (
                 (a.stats.find(s => s.name === 'rank')?.value || 99) - (b.stats.find(s => s.name === 'rank')?.value || 99)
              );
              const entry = sorted[rank - 1];
-             
-             // BRACKET AUTOMATIQUE:
-             // On affiche les noms réels UNIQUEMENT en Predict (Simulation) ou si tournoi commencé + date charnière
              if (entry && (isSimulation || (isTournamentStarted && isPastRelease && (entry.stats.find(s => s.name === 'gamesPlayed')?.value || 0) >= 2))) {
                  return entry.team.name;
              }
