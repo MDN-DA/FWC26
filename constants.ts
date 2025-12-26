@@ -8,6 +8,8 @@ export const countryMapping: Record<string, string> = {
     "Haiti": "Haiti",
     "Jamaica": "Jamaica",
     "Panama": "Panama",
+    "Curacao": "Curaçao",
+    "Curaçao": "Curaçao",
     
     // South America
     "Bolivia": "Bolivia",

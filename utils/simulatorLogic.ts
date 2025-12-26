@@ -1,5 +1,4 @@
 
-
 import { UCLGroup, StandingEntry } from '../types';
 import { groupFixtures } from '../data/groupFixtures';
 import { countryMapping } from '../constants';
@@ -36,11 +35,11 @@ export const calculateSimulatedStandings = (
         if (isNaN(hScore) || isNaN(aScore)) return;
 
         // RESOLUTION LOGIC
-        // 1. Normalize the name from the fixture (e.g., "Winner Path A" -> "Path A [UEFA]")
+        // 1. Normalize the name from the fixture
         const homeNormalized = countryMapping[fixture.homeTeam] || fixture.homeTeam;
         const awayNormalized = countryMapping[fixture.awayTeam] || fixture.awayTeam;
 
-        // 2. Check if this team has been mapped in the Simulator Setup (e.g. "Path A [UEFA]" -> "Italy")
+        // 2. Check if this team has been mapped in the Simulator Setup
         const homeFinal = playoffMapping?.[homeNormalized] || homeNormalized;
         const awayFinal = playoffMapping?.[awayNormalized] || awayNormalized;
 
@@ -81,12 +80,14 @@ export const calculateSimulatedStandings = (
 
 // Helpers
 const findTeamEntry = (groups: UCLGroup[], teamName: string): StandingEntry | undefined => {
+    const target = teamName.toLowerCase().trim();
     for (const group of groups) {
-        // Recherche souple (nom ou display name)
-        const entry = group.standings.entries.find(e => 
-            e.team.name === teamName || 
-            e.team.displayName === teamName
-        );
+        const entry = group.standings.entries.find(e => {
+            const n = e.team.name.toLowerCase().trim();
+            const dn = (e.team.displayName || "").toLowerCase().trim();
+            // Comparaison flexible incluant le mapping pour gérer les accents comme dans "Curaçao"
+            return n === target || dn === target || (countryMapping[teamName] || teamName).toLowerCase() === n;
+        });
         if (entry) return entry;
     }
     return undefined;
