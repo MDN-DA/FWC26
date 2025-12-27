@@ -11,8 +11,8 @@ export const Footer: React.FC = () => {
         { name: 'Palestine', url: 'https://flagcdn.com/w40/ps.png', group: 2 },
         { name: 'Yemen', url: 'https://flagcdn.com/w40/ye.png', group: 2 },
         { name: 'Kashmir', url: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Flag_of_Azad_Kashmir.svg', group: 2 },
-        { name: 'Rohingya', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Rohingya_flag.svg/330px-Rohingya_flag.svg.png', group: 2 },
-        { name: 'Uyghurs', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Kokbayraq_flag.svg/330px-Kokbayraq_flag.svg.png', group: 2 }
+        { name: 'Rohingya', url: 'https://upload.wikimedia.org/wikipedia/commons/8/83/Rohingya_flag.svg', group: 2 },
+        { name: 'Uyghurs', url: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Kokbayraq_flag.svg', group: 2 }
     ];
 
     const allItems = solidarityData;
