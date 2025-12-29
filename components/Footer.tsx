@@ -2,52 +2,53 @@
 import React from 'react';
 
 export const Footer: React.FC = () => {
+    // Liste élargie de 12 nations (13 drapeaux au total avec le Kashmir)
     const solidarityData = [
-        // Group 1 (Africa)
-        { name: 'Sudan', url: 'https://flagcdn.com/w40/sd.png', group: 1 },
-        { name: 'DR Congo', url: 'https://flagcdn.com/w40/cd.png', group: 1 },
-        { name: 'Ethiopia', url: 'https://flagcdn.com/w40/et.png', group: 1 },
-        // Group 2 (Asia)
-        { name: 'Palestine', url: 'https://flagcdn.com/w40/ps.png', group: 2 },
-        { name: 'Yemen', url: 'https://flagcdn.com/w40/ye.png', group: 2 },
-        { name: 'Kashmir', url: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Flag_of_Azad_Kashmir.svg', group: 2 },
-        { name: 'Rohingya', url: 'https://upload.wikimedia.org/wikipedia/commons/8/83/Rohingya_flag.svg', group: 2 },
-        { name: 'Uyghurs', url: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Kokbayraq_flag.svg', group: 2 }
+        { name: 'Sudan', urls: ['https://flagcdn.com/w40/sd.png'] },
+        { name: 'Palestine', urls: ['https://flagcdn.com/w40/ps.png'] },
+        { name: 'DR Congo', urls: ['https://flagcdn.com/w40/cd.png'] },
+        { name: 'Yemen', urls: ['https://flagcdn.com/w40/ye.png'] },
+        { name: 'Syria', urls: ['https://flagcdn.com/w40/sy.png'] },
+        { name: 'Ethiopia', urls: ['https://flagcdn.com/w40/et.png'] },
+        { name: 'Somalia', urls: ['https://flagcdn.com/w40/so.png'] },
+        { 
+            name: 'Kashmir', 
+            urls: [
+                'https://upload.wikimedia.org/wikipedia/commons/4/4d/Flag_of_Azad_Kashmir.svg',
+                'https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Jammu_and_Kashmir_(1952-2019).svg'
+            ] 
+        },
+        { name: 'Afghanistan', urls: ['https://flagcdn.com/w40/af.png'] },
+        { name: 'Rohingya', urls: ['https://upload.wikimedia.org/wikipedia/commons/8/83/Rohingya_flag.svg'] },
+        { name: 'Uyghurs', urls: ['https://upload.wikimedia.org/wikipedia/commons/2/2c/Kokbayraq_flag.svg'] },
+        { name: 'Chad', urls: ['https://flagcdn.com/w40/td.png'] }
     ];
-
-    const allItems = solidarityData;
 
     return (
         <div className="mt-12 pt-10 border-t border-gray-400 dark:border-dark-border text-sm pb-8">
-            <div className="w-full max-w-5xl mx-auto p-6 bg-gray-50 dark:bg-dark-card/50 border-l-4 border-host-red text-gray-700 dark:text-gray-300 rounded-r-lg shadow-sm">
-                <p className="font-bold text-center mb-6 text-xs sm:text-sm uppercase tracking-widest text-gray-500 dark:text-gray-400">
+            <div className="w-full max-w-6xl mx-auto p-5 bg-gray-50 dark:bg-dark-card/50 border-l-4 border-host-red text-gray-700 dark:text-gray-300 rounded-r-lg shadow-sm">
+                <p className="font-bold text-center mb-6 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 px-2">
                     In solidarity with the people struggling for freedom 🕊️ and justice ⚖️✊.
                 </p>
                 
                 <div className="flex flex-col items-center">
                     {/* 
-                        Responsive Logic: 
-                        - Mobile: Grid of 4 columns (2 rows for 8 items)
-                        - Tablet/PC: Flex row (1 line)
+                        Layout Logic:
+                        - Mobile: Grid 6 columns x 2 rows (12 items)
+                        - Desktop: Flex row single line
                     */}
-                    <div className="grid grid-cols-4 md:flex md:flex-row md:items-center justify-center gap-x-3 sm:gap-x-6 gap-y-5 md:gap-y-0 w-full">
-                        {allItems.map((item, index) => (
-                            <React.Fragment key={item.name}>
-                                {/* Subtle Separator for Desktop only between Groups */}
-                                {index === 3 && (
-                                    <div className="hidden md:block w-px h-6 bg-gray-300 dark:bg-white/10 mx-2"></div>
-                                )}
-                                <div className="flex flex-col md:flex-row items-center gap-1.5 sm:gap-2.5 transition-all duration-300 hover:scale-110 group cursor-default">
+                    <div className="grid grid-cols-6 md:flex md:flex-row md:flex-nowrap items-center justify-center gap-2.5 sm:gap-4 px-2 py-2">
+                        {solidarityData.map((item) => (
+                            <div key={item.name} className="flex items-center justify-center gap-0.5 transition-all duration-300 hover:scale-125 hover:-translate-y-1 cursor-help" title={item.name}>
+                                {item.urls.map((url, i) => (
                                     <img 
-                                        src={item.url} 
-                                        alt={`${item.name} flag`} 
-                                        className="h-5 w-8 object-cover rounded-[1px] shadow-md border border-black/5 dark:border-white/10" 
+                                        key={i}
+                                        src={url} 
+                                        alt={item.name} 
+                                        className="h-4 w-6 sm:h-5 sm:w-8 object-cover rounded-[1px] shadow-sm border border-black/10 dark:border-white/20" 
                                     />
-                                    <span className="font-black text-[9px] sm:text-[10px] group-hover:text-host-red transition-colors whitespace-nowrap text-center">
-                                        {item.name}
-                                    </span>
-                                </div>
-                            </React.Fragment>
+                                ))}
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -59,7 +60,7 @@ export const Footer: React.FC = () => {
             
             <div className="mt-10 flex flex-col items-center justify-center gap-2 text-host-blue dark:text-white">
                 <div className="flex items-center flex-wrap justify-center gap-2 text-lg tracking-wide">
-                    <span className="font-bold">Crafted with ❤️ by</span>
+                    <span className="font-bold text-sm sm:text-lg">Crafted with ❤️ by</span>
                     <a 
                         href="https://gunners-stats.pages.dev/" 
                         target="_blank" 
@@ -71,7 +72,7 @@ export const Footer: React.FC = () => {
                             alt="Gunners-Stats Logo" 
                             className="h-7 w-auto object-contain group-hover:scale-110 transition-transform" 
                         />
-                        <span className="font-black">Gunners-Stats</span>
+                        <span className="font-black text-sm sm:text-lg">Gunners-Stats</span>
                     </a>
                 </div>
             </div>
